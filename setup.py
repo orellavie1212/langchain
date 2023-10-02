@@ -4,7 +4,6 @@ import re
 import subprocess
 from typing import List, Set
 
-from packaging.version import parse, Version
 import setuptools
 
 ROOT_DIR = os.path.dirname(__file__)
