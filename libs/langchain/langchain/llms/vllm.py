@@ -66,6 +66,12 @@ class VLLM(BaseLLM):
     """Directory to download and load the weights. (Default to the default 
     cache dir of huggingface)"""
 
+    vllm_obj: Optional[str] = None
+    """Holds `vllm.LLM` explicitly specified."""
+
+    vllm_sampling_params_obj: Optional[str] = None
+    """Holds model sampling parameters valid for `vllm.LLM` call explicitly specified."""
+
     vllm_kwargs: Dict[str, Any] = Field(default_factory=dict)
     """Holds any model parameters valid for `vllm.LLM` call not explicitly specified."""
 
@@ -82,15 +88,17 @@ class VLLM(BaseLLM):
                 "Could not import vllm python package. "
                 "Please install it with `pip install vllm`."
             )
-
-        values["client"] = VLLModel(
-            model=values["model"],
-            tensor_parallel_size=values["tensor_parallel_size"],
-            trust_remote_code=values["trust_remote_code"],
-            dtype=values["dtype"],
-            download_dir=values["download_dir"],
-            **values["vllm_kwargs"],
-        )
+        if not vllm_obj:
+            values["client"] = VLLModel(
+                model=values["model"],
+                tensor_parallel_size=values["tensor_parallel_size"],
+                trust_remote_code=values["trust_remote_code"],
+                dtype=values["dtype"],
+                download_dir=values["download_dir"],
+                **values["vllm_kwargs"],
+            )
+        else:
+            values["client"] = vllm_obj
 
         return values
 
@@ -121,11 +129,13 @@ class VLLM(BaseLLM):
     ) -> LLMResult:
         """Run the LLM on the given prompt and input."""
 
-        from vllm import SamplingParams
-
-        # build sampling parameters
-        params = {**self._default_params, **kwargs, "stop": stop}
-        sampling_params = SamplingParams(**params)
+        if not vllm_sampling_params_obj:
+            from vllm import SamplingParams
+            # build sampling parameters
+            params = {**self._default_params, **kwargs, "stop": stop}
+            sampling_params = SamplingParams(**params)
+        else:
+            sampling_params = vllm_sampling_params_obj
         # call the model
         outputs = self.client.generate(prompts, sampling_params)
 
