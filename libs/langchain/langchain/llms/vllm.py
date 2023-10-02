@@ -66,6 +66,12 @@ class VLLM(BaseLLM):
     """Directory to download and load the weights. (Default to the default 
     cache dir of huggingface)"""
 
+    vllm_obj: Optional[object] = None
+    """Holds specified `vllm.LLM` as obj."""
+    
+    vllm_params_obj: Optional[object] = None
+    """Holds specified sampling parameters valid for `vllm.LLM` as obj."""
+
     vllm_kwargs: Dict[str, Any] = Field(default_factory=dict)
     """Holds any model parameters valid for `vllm.LLM` call not explicitly specified."""
 
@@ -83,7 +89,10 @@ class VLLM(BaseLLM):
                 "Please install it with `pip install vllm`."
             )
 
-        values["client"] = VLLModel(
+        if vllm_obj is not None:
+            values["client"] = vllm_obj
+        else:
+            values["client"] = VLLModel(
             model=values["model"],
             tensor_parallel_size=values["tensor_parallel_size"],
             trust_remote_code=values["trust_remote_code"],
@@ -121,11 +130,13 @@ class VLLM(BaseLLM):
     ) -> LLMResult:
         """Run the LLM on the given prompt and input."""
 
-        from vllm import SamplingParams
-
-        # build sampling parameters
-        params = {**self._default_params, **kwargs, "stop": stop}
-        sampling_params = SamplingParams(**params)
+        if not vllm_params_obj:
+            from vllm import SamplingParams
+            # build sampling parameters
+            params = {**self._default_params, **kwargs, "stop": stop}
+            sampling_params = SamplingParams(**params)
+        else:
+            sampling_params = vllm_params_obj
         # call the model
         outputs = self.client.generate(prompts, sampling_params)
 
