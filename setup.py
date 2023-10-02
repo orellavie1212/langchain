@@ -53,6 +53,7 @@ setuptools.setup(
                                                "examples", "tests")),
     python_requires=">=3.8",
     install_requires=get_requirements(),
-    package_data={'langchain': ['chains/llm_summarization_checker/prompts/*.txt']},
+    package_data={'langchain': ['chains/llm_summarization_checker/prompts/*.txt',
+                               'llms/grammars/*.gbnf']},
 
 )
