@@ -43,7 +43,7 @@ grpcio==1.59.0
 h11==0.14.0
 httplib2==0.20.2
 httptools==0.6.0
-huggingface-hub==0.17.3
+huggingface-hub==0.16.4
 idna==3.3
 importlib-metadata==6.8.0
 jeepney==0.7.1
